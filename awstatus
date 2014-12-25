@@ -1,0 +1,48 @@
+#!/bin/sh
+
+function dump_changes() {
+	if [ `git status -s | wc -l` -gt 0 ]; then
+		tput setaf 4
+		echo "   *  local changes:"
+		git status -s | sed 's/^\s*/      /'
+		tput sgr0
+	fi
+}
+
+function dump_repo() {
+	r=`git branch -vv | grep -oE '\[.+\]'`
+	if [ -z "$r" ]; then
+		tput setaf 1
+		echo "   $d has no remote"
+		tput sgr0
+		dump_changes
+	elif [ -z "`echo $r | grep ':'`" ]; then
+		tput setaf 2
+		echo "   $d is at head"
+		tput sgr0
+		dump_changes
+	else
+		tput setaf 4
+		echo "*  $d is `echo $r | tr -d [] | cut -d' ' -f2-`"
+		tput sgr0
+		dump_changes
+	fi
+	if [ -e Makefile -a ! -e .gitignore ]; then
+		tput setaf 3
+		echo "   !  $d has a Makefile but no .gitignore"
+		tput sgr0
+	fi
+}
+
+for d in aw-*; do
+	if [ -d "$d/.git" ]; then
+		cd $d
+		dump_repo
+		cd ..
+	else
+		tput setaf 1
+		echo "   $d has no repository"
+		tput sgr0
+	fi
+done
+
