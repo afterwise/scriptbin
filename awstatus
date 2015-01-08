@@ -34,9 +34,13 @@ function dump_repo() {
 	fi
 }
 
+if [ $# -gt 0 -a -d "$1" ]; then
+	cd "$1"
+fi
+
 for d in aw-*; do
 	if [ -d "$d/.git" ]; then
-		cd $d
+		cd "$d"
 		dump_repo
 		cd ..
 	else
