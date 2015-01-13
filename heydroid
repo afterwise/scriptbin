@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# http://developer.android.com/tools/help/adb.html
+
+if [ -z "$SDK_ROOT" ]; then
+	SDK_ROOT=~/Downloads/adt-bundle-mac-x86_64-20140702/sdk
+fi
+
+if [ ! -d "$SDK_ROOT" ]; then
+	echo "Unknown SDK directory, set SDK_ROOT"
+	exit 1
+fi
+
+ADB=${SDK_ROOT}/platform-tools/adb
+
+if [ $# -lt 1 ]; then
+	echo "Usage: `basename $0` <command>"
+	echo "Commands:"
+	echo "  install <apk>"
+	echo "  uninstall <pkg>"
+	echo "  kill <pkg>"
+	echo "  profile <pkg>			(Unity)"
+	echo "  log				(Unity)"
+	echo "  screencap <path>"
+	exit 1
+fi
+
+case "$1" in
+install)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <apk>" && exit 1; fi
+	${ADB} install $2 ;;
+
+uninstall)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
+	${ADB} shell pm uninstall $2 ;;
+
+list)
+	${ADB} shell pm list packages -f ;;
+
+kill)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
+	${ADB} shell am force-stop $2 ;;
+
+profile)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
+	${ADB} forward tcp:54999 localabstract:Unityinsert-$2 ;;
+
+log)
+	${ADB} logcat -s Unity:IWEF ;;
+
+screencap)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <path>" && exit 1; fi
+	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2.png ;;
+
+*)
+	${ADB} $* ;;
+esac
+
