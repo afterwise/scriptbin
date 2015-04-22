@@ -18,6 +18,7 @@ if [ $# -lt 1 ]; then
 	echo "Commands:"
 	echo "  install <apk>"
 	echo "  uninstall <pkg>"
+	echo "  list"
 	echo "  kill <pkg>"
 	echo "  profile <pkg>			(Unity)"
 	echo "  log				(Unity)"
@@ -46,7 +47,7 @@ profile)
 	${ADB} forward tcp:54999 localabstract:Unityinsert-$2 ;;
 
 log)
-	${ADB} logcat -s Unity:IWEF ;;
+	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' ;;
 
 screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path>" && exit 1; fi
