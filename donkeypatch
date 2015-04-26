@@ -6,9 +6,9 @@ use List::MoreUtils qw(any);
 
 GetOptions(
 	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs,
-	'x=s' => \@excludes, 'f=s' => \@fuzz);
+	'x=s' => \@excludes, 'f=s' => \@filters);
 
-die("$0 [-y] [--rcs {p4|git}] [-x <exclude> ...] [-f <fuzz>] <source> <target>")
+die("$0 [-y] [-r {p4|git}] [-x <exclude> ...] [-f <filter> ...] <source> <target>")
 	if (scalar(@ARGV) != 2);
 
 $source = $ARGV[0];
@@ -41,8 +41,8 @@ foreach $x (split(/\n/, `$cmd`)) {
 		}
 
 		if ($op eq 'del') {
-			if (scalar(@fuzz) > 0 && !(any {$t =~ /$_/ix} @fuzz)) {
-				print "No fuzz $t\n" if ($verbose);
+			if (scalar(@filters) > 0 && !(any {$t =~ /$_/ix} @filters)) {
+				print "Filtered $t\n" if ($verbose);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
 				push(@cmds, ("p4 delete -c default \"$tt\"")) if (-f $y);
@@ -66,8 +66,8 @@ foreach $x (split(/\n/, `$cmd`)) {
 				push(@cmds, ("cp \"$s\" \"$t\"")) if (-f $y);
 			}
 		} elsif ($op eq 'copy') {
-			if (scalar(@fuzz) > 0 && !(any {$t =~ /$_/ix} @fuzz)) {
-				print "No fuzz $t\n" if ($verbose);
+			if (scalar(@filters) > 0 && !(any {$t =~ /$_/ix} @filters)) {
+				print "Filtered $t\n" if ($verbose);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
 				push(@cmds, ("p4 edit -c default \"$tt\"", "cp \"$s\" \"$t\"")) if (-f $y);
