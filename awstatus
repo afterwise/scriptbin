@@ -34,15 +34,17 @@ function dump_repo() {
 	fi
 }
 
-if [ $# -gt 0 -a -d "$1" ]; then
-	cd "$1"
+if [ -n "$*" ]; then
+	dirs="$*"
+else
+	dirs="."
 fi
 
-for d in aw-*; do
+for d in $dirs; do
 	if [ -d "$d/.git" ]; then
-		cd "$d"
+		pushd "$d" > /dev/null
 		dump_repo
-		cd ..
+		popd > /dev/null
 	else
 		tput setaf 1
 		echo "   $d has no repository"
