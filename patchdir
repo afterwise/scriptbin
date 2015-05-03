@@ -6,9 +6,9 @@ use List::MoreUtils qw(any);
 
 GetOptions(
 	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs,
-	'x=s' => \@excludes, 'f=s' => \@filters);
+	'f' => \$force, 'x=s' => \@excludes, 'm=s' => \@matches);
 
-die("$0 [-y] [-r {p4|git}] [-x <exclude> ...] [-f <filter> ...] <source> <target>")
+die("$0 [-f] [-y] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>")
 	if (scalar(@ARGV) != 2);
 
 $source = $ARGV[0];
@@ -41,15 +41,15 @@ foreach $x (split(/\n/, `$cmd`)) {
 		}
 
 		if ($op eq 'del') {
-			if (scalar(@filters) > 0 && !(any {$t =~ /$_/ix} @filters)) {
+			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
 				print "Filtered $t\n" if ($verbose);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
 				push(@cmds, ("p4 delete -c default \"$tt\"")) if (-f $y);
 			} elsif ($rcs eq 'git') {
-				push(@cmds, ("git remove $t")) if (-f $y);
+				push(@cmds, ("git remove \"$t\"")) if (-f $y);
 			} else {
-				push(@cmds, ("rm -f $t")) if (-f $y);
+				push(@cmds, ("rm -f \"$t\"")) if (-f $y);
 			}
 		} elsif ($op eq 'add') {
 			$d = dirname($t);
@@ -63,10 +63,10 @@ foreach $x (split(/\n/, `$cmd`)) {
 			} elsif ($rcs eq 'git') {
 				push(@cmds, ("cp \"$s\" \"$t\"", "git add \"$t\"")) if (-f $y);
 			} else {
-				push(@cmds, ("cp \"$s\" \"$t\"")) if (-f $y);
+				push(@cmds, ("cp".($force ? ' -f' : '')." \"$s\" \"$t\"")) if (-f $y);
 			}
 		} elsif ($op eq 'copy') {
-			if (scalar(@filters) > 0 && !(any {$t =~ /$_/ix} @filters)) {
+			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
 				print "Filtered $t\n" if ($verbose);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
@@ -74,7 +74,7 @@ foreach $x (split(/\n/, `$cmd`)) {
 			} elsif ($rcs eq 'git') {
 				push(@cmds, ("cp \"$s\" \"$t\"", "git add \"$t\"")) if (-f $y);
 			} else {
-				push(@cmds, ("cp \"$s\" \"$t\"")) if (-f $y);
+				push(@cmds, ("cp".($force ? ' -f' : '')." \"$s\" \"$t\"")) if (-f $y);
 			}
 		}
 	}
