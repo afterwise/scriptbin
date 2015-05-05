@@ -14,15 +14,18 @@ die("$0 [-f] [-y] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <ta
 $source = $ARGV[0];
 $target = $ARGV[1];
 %dirs = ('.' => '');
+$nadd = 0;
+$ndel = 0;
+$ncopy = 0;
 
-$cmd = "diff -r ".($verbose < 2 ? '-q' : '-u').
+$cmd = "diff -r ".($verbose < 3 ? '-q' : '-u').
 	" -x\".*\"".join('', (map {" -x\"$_\""} @excludes)).
 	" \"$source\" \"$target\"";
-print "$cmd\n";
+print "$cmd\n" if ($verbose);
 
 foreach $x (split(/\n/, `$cmd`)) {
-	print "$x\n" if ($verbose);
-	next if ($verbose > 1);
+	print "$x\n" if ($verbose > 1);
+	next if ($verbose > 2);
 
 	if ($x =~ s/^Files (.+) and .*$/\1/) {
 		$op = 'copy';
@@ -42,14 +45,17 @@ foreach $x (split(/\n/, `$cmd`)) {
 
 		if ($op eq 'del') {
 			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
-				print "Filtered $t\n" if ($verbose);
+				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
 				push(@cmds, ("p4 delete -c default \"$tt\"")) if (-f $y);
+				$ndel++;
 			} elsif ($rcs eq 'git') {
 				push(@cmds, ("git remove \"$t\"")) if (-f $y);
+				$ndel++;
 			} else {
 				push(@cmds, ("rm -f \"$t\"")) if (-f $y);
+				$ndel++;
 			}
 		} elsif ($op eq 'add') {
 			$d = dirname($t);
@@ -60,28 +66,36 @@ foreach $x (split(/\n/, `$cmd`)) {
 
 			if ($rcs eq 'p4') {
 				push(@cmds, ("cp \"$s\" \"$t\"", "p4 add -d -f -c default \"$t\"")) if (-f $y);
+				$nadd++;
 			} elsif ($rcs eq 'git') {
 				push(@cmds, ("cp \"$s\" \"$t\"", "git add \"$t\"")) if (-f $y);
+				$nadd++;
 			} else {
 				push(@cmds, ("cp".($force ? ' -f' : '')." \"$s\" \"$t\"")) if (-f $y);
+				$nadd++;
 			}
 		} elsif ($op eq 'copy') {
 			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
-				print "Filtered $t\n" if ($verbose);
+				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
 				push(@cmds, ("p4 edit -c default \"$tt\"", "cp \"$s\" \"$t\"")) if (-f $y);
+				$ncopy++;
 			} elsif ($rcs eq 'git') {
 				push(@cmds, ("cp \"$s\" \"$t\"", "git add \"$t\"")) if (-f $y);
+				$ncopy++;
 			} else {
 				push(@cmds, ("cp".($force ? ' -f' : '')." \"$s\" \"$t\"")) if (-f $y);
+				$ncopy++;
 			}
 		}
 	}
 }
 
 foreach (@cmds) {
-	print "$_\n";
+	print "$_\n" if ($verbose);
 	system($_) unless ($dryrun);
 }
+
+print "Processed ".scalar(@cmds)." files: $nadd added $ndel deleted $ncopy copied\n";
 
