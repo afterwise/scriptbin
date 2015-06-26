@@ -29,12 +29,11 @@ foreach $x (split(/\n/, `$cmd`)) {
 
 	if ($x =~ s/^Files (.+) and .*$/\1/) {
 		$op = 'copy';
-	} elsif ($x =~ s/^Only in (.+):/\1/) {
-		$x =~ s/ ([^\s]+(\.[a-z]+)?)$/\/\1/;
+	} elsif ($x =~ s/^Only in (.+): /\1\//) {
 		$op = (index($x, $source) == 0) ? 'add' : 'del';
 	}
 
-	foreach $y ((-d $x) ? split(/\n/, `find "$x" -type f`) : ($x)) {
+	foreach $y ((-d "$x") ? split(/\n/, `find "$x" -type f`) : ($x)) {
 		if (index($y, $source) == 0) {
 			$s = $y;
 			$t = ($target ne '.' ? "$target/" : '').substr($y, length($source) + 1);
@@ -48,14 +47,20 @@ foreach $x (split(/\n/, `$cmd`)) {
 				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
-				push(@cmds, ("p4 delete -c default '$tt'")) if (-f $y);
-				$ndel++;
+				if (-f $y) {
+					push(@cmds, ("p4 delete -c default '$tt'"));
+					$ndel++;
+				}
 			} elsif ($rcs eq 'git') {
-				push(@cmds, ("git remove '$t'")) if (-f $y);
-				$ndel++;
+				if (-f $y) {
+					push(@cmds, ("git remove '$t'"));
+					$ndel++;
+				}
 			} else {
-				push(@cmds, ("rm -f '$t'")) if (-f $y);
-				$ndel++;
+				if (-f $y) {
+					push(@cmds, ("rm -f '$t'"));
+					$ndel++;
+				}
 			}
 		} elsif ($op eq 'add') {
 			$d = dirname($t);
@@ -65,28 +70,40 @@ foreach $x (split(/\n/, `$cmd`)) {
 			}
 
 			if ($rcs eq 'p4') {
-				push(@cmds, ("cp '$s' '$t'", "p4 add -d -f -c default '$t'")) if (-f $y);
-				$nadd++;
+				if (-f $y) {
+					push(@cmds, ("cp '$s' '$t'", "p4 add -d -f -c default '$t'"));
+					$nadd++;
+				}
 			} elsif ($rcs eq 'git') {
-				push(@cmds, ("cp '$s' '$t'", "git add '$t'")) if (-f $y);
-				$nadd++;
+				if (-f $y) {
+					push(@cmds, ("cp '$s' '$t'", "git add '$t'"));
+					$nadd++;
+				}
 			} else {
-				push(@cmds, ('cp'.($force ? ' -f' : '')." '$s' '$t'")) if (-f $y);
-				$nadd++;
+				if (-f $y) {
+					push(@cmds, ('cp'.($force ? ' -f' : '')." '$s' '$t'"));
+					$nadd++;
+				}
 			}
 		} elsif ($op eq 'copy') {
 			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
 				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
-				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
-				push(@cmds, ("p4 edit -c default '$tt'", "cp '$s' '$t'")) if (-f $y);
-				$ncopy++;
+				if (-f $y) {
+					$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
+					push(@cmds, ("p4 edit -c default '$tt'", "cp '$s' '$t'"));
+					$ncopy++;
+				}
 			} elsif ($rcs eq 'git') {
-				push(@cmds, ("cp '$s' '$t'", "git add '$t'")) if (-f $y);
-				$ncopy++;
+				if (-f $y) {
+					push(@cmds, ("cp '$s' '$t'", "git add '$t'"));
+					$ncopy++;
+				}
 			} else {
-				push(@cmds, ('cp'.($force ? ' -f' : '')." '$s' '$t'")) if (-f $y);
-				$ncopy++;
+				if (-f $y) {
+					push(@cmds, ('cp'.($force ? ' -f' : '')." '$s' '$t'"));
+					$ncopy++;
+				}
 			}
 		}
 	}
