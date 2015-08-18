@@ -16,42 +16,48 @@ ADB=${SDK_ROOT}/platform-tools/adb
 if [ $# -lt 1 ]; then
 	echo "Usage: `basename $0` <command>"
 	echo "Commands:"
-	echo "  install <apk>"
-	echo "  uninstall <pkg>"
+	echo "  install <path/to/my.apk>"
+	echo "  uninstall <com.pkg.my>"
 	echo "  list"
-	echo "  kill <pkg>"
-	echo "  profile <pkg>			(Unity)"
-	echo "  log				(Unity)"
-	echo "  screencap <path>"
+	echo "  start <com.pkg.my>"
+	echo "  kill <com.pkg.my>"
+	echo "  profile <com.pkg.my>      (Unity)"
+	echo "  log                       (Unity)"
+	echo "  screencap <path/to/file.png>"
 	exit 1
 fi
 
 case "$1" in
 install)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <apk>" && exit 1; fi
+	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
 	${ADB} install $2 ;;
 
 uninstall)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
+	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} shell pm uninstall $2 ;;
 
 list)
 	${ADB} shell pm list packages -f ;;
 
+start)
+	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my/com.pkg.my.activity>" && exit 1; fi
+	${ADB} shell am start -n $2 ;;
+
 kill)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
+	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} shell am force-stop $2 ;;
 
 profile)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <pkg>" && exit 1; fi
-	${ADB} forward tcp:54999 localabstract:Unityinsert-$2 ;;
+	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
+	${ADB} forward tcp:54999 localabstract:Unity-$2
+	${ADB} forward --list ;;
 
 log)
 	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' ;;
 
 screencap)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <path>" && exit 1; fi
-	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2.png ;;
+	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
+	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
 
 *)
 	${ADB} $* ;;
