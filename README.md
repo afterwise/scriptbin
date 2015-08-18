@@ -14,7 +14,18 @@ Print the current state of git repositories to stdout, with information about lo
 
 Shorthand commands for ADB, and conveniences for profiling and logging Unity.
 
-`Usage: heydroid {install|uninstall|list|kill|profile|log|screencap} [args]`
+```
+Usage: heydroid <command>
+Commands:
+  install <path/to/my.apk>
+  uninstall <com.pkg.my>
+  list
+  start <com.pkg.my>
+  kill <com.pkg.my>
+  profile <com.pkg.my>      (Unity)
+  log                       (Unity)
+  screencap <path/to/file.png>
+```
 
 # patchdir
 
