@@ -28,34 +28,34 @@ if [ $# -lt 1 ]; then
 fi
 
 case "$1" in
-install)
+i|in|install)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
 	${ADB} install $2 ;;
 
-uninstall)
+u|un|uninstall)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} shell pm uninstall $2 ;;
 
-list)
+l|list)
 	${ADB} shell pm list packages -f ;;
 
-start)
+s|start)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my/com.pkg.my.activity>" && exit 1; fi
 	${ADB} shell am start -n $2 ;;
 
-kill)
+k|kill)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} shell am force-stop $2 ;;
 
-profile)
+p|profile)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} forward tcp:54999 localabstract:Unity-$2
 	${ADB} forward --list ;;
 
-log)
+o|log)
 	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' ;;
 
-screencap)
+s|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
 
