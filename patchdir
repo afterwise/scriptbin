@@ -5,10 +5,10 @@ use Getopt::Long;
 use List::MoreUtils qw(any);
 
 GetOptions(
-	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs,
+	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs, 'a' => \$addonly,
 	'f' => \$force, 'x=s' => \@excludes, 'm=s' => \@matches);
 
-die("$0 [-f] [-y] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>")
+die("$0 [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>")
 	if (scalar(@ARGV) != 2);
 
 $source = $ARGV[0];
@@ -43,7 +43,7 @@ foreach $x (split(/\n/, `$cmd`)) {
 		}
 
 		if ($op eq 'del') {
-			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
+			if ($addonly || (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches))) {
 				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
 				$tt = $t =~ s/\%/25/gr =~ s/\@/%40/gr =~ s/\#/%23/gr =~ s/\*/%2A/gr =~ y/ /*/r;
@@ -86,7 +86,8 @@ foreach $x (split(/\n/, `$cmd`)) {
 				}
 			}
 		} elsif ($op eq 'copy') {
-			if (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches)) {
+			if ($addonly || (scalar(@matches) > 0 && !(any {$t =~ /$_/ix} @matches))) {
+				print "Warning! $t already exists\n" if ($addonly);
 				print "Ignoring $t\n" if ($verbose > 1);
 			} elsif ($rcs eq 'p4') {
 				if (-f $y) {
