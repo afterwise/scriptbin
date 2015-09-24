@@ -31,5 +31,5 @@ Commands:
 
 Patch/upgrade any directory (in source control), e.g. when upgrading the statically linked version of libcurl in your game repository.
 
-`Usage: patchdir [-y] [-r {p4|git}] [-x <exclude> ...] [-f <filter> ...] <source> <target>`
+`Usage: patchdir [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
 
