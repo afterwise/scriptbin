@@ -2,26 +2,35 @@
 
 # http://developer.android.com/tools/help/adb.html
 
-if [ -z "$SDK_ROOT" ]; then
-	SDK_ROOT=~/Downloads/adt-bundle-mac-x86_64-20140702/sdk
+# an example .heydroid_config - drop one of these into your
+# working directory (e.g. project build dir) to automatically
+# use the right arguments when doing repetitive exercises:
+#
+# HEYDROID_SDK=/usr/local/android
+# HEYDROID_APK=my.apk
+# HEYDROID_PKG=com.pkg.my
+# HEYDROID_APP=com.pkg.my.activity
+
+if [ -e .heydroid_config ]; then
+	. .heydroid_config
 fi
 
-if [ ! -d "$SDK_ROOT" ]; then
-	echo "Unknown SDK directory, set SDK_ROOT"
+if [ ! -d "$HEYDROID_SDK" ]; then
+	echo "Unknown SDK directory, set HEYDROID_SDK"
 	exit 1
 fi
 
-ADB=${SDK_ROOT}/platform-tools/adb
+ADB=${HEYDROID_SDK}/platform-tools/adb
 
 if [ $# -lt 1 ]; then
 	echo "Usage: `basename $0` <command>"
 	echo "Commands:"
-	echo "  install <path/to/my.apk>"
-	echo "  uninstall <com.pkg.my>"
+	echo "  install [path/to/my.apk]"
+	echo "  uninstall [com.pkg.my]"
 	echo "  list"
-	echo "  start <com.pkg.my>"
-	echo "  kill <com.pkg.my>"
-	echo "  profile <com.pkg.my>      (Unity)"
+	echo "  start [com.pkg.my/com.pkg.my.activity]"
+	echo "  kill [com.pkg.my]"
+	echo "  profile [com.pkg.my]      (Unity)"
 	echo "  log                       (Unity)"
 	echo "  screencap <path/to/file.png>"
 	exit 1
@@ -29,27 +38,37 @@ fi
 
 case "$1" in
 i|in|install)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
-	${ADB} install $2 ;;
+	apk="$2"
+	if [ -z "$apk" ]; then apk="$HEYDROID_APK"; fi
+	if [ -z "$apk" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
+	${ADB} install $apk ;;
 
 u|un|uninstall)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} shell pm uninstall $2 ;;
+	pkg="$2"
+	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
+	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
+	${ADB} shell pm uninstall $pkg ;;
 
 l|list)
 	${ADB} shell pm list packages -f ;;
 
 s|start)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my/com.pkg.my.activity>" && exit 1; fi
-	${ADB} shell am start -n $2 ;;
+	app="$2"
+	if [ -z "$app" ]; then app="$HEYDROID_PKG/$HEYDROID_APP"; fi
+	if [ -z "$app" ]; then echo "`basename $0` $1 <com.pkg.my/com.pkg.my.activity>" && exit 1; fi
+	${ADB} shell am start -n $app ;;
 
 k|kill)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} shell am force-stop $2 ;;
+	pkg="$2"
+	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
+	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
+	${ADB} shell am force-stop $pkg ;;
 
 p|profile)
-	if [ -z "$2" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} forward tcp:54999 localabstract:Unity-$2
+	pkg="$2"
+	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
+	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
+	${ADB} forward tcp:54999 localabstract:Unity-$pkg
 	${ADB} forward --list ;;
 
 o|log)
