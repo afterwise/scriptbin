@@ -84,12 +84,14 @@ c|screencap)
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
 
 ''|interactive)
-	if [ -e .heydroid_config ]; then echo "Configuration: $HEYDROID_APK: $HEYDROID_PKG/$HEYDROID_APP"; fi
+	if [ -e .heydroid_config ]; then
+		echo $'Configuration: \e[96m' $HEYDROID_APK $'\e[0m:\e[92m' $HEYDROID_PKG $'\e[0m/\e[92m' $HEYDROID_APP $'\e[0m';
+	fi
 	${ADB} start-server
 	${ADB} devices
 	while /bin/echo -n $'\e[96mhey\e[92mdroid\e[0m> ' && read -r line; do
-		if [ "$line" = '!!' ]; then line=$prev; fi
-		$0 $line
+		if [ -z "$line" ]; then line=$prev; fi
+		if [ -n "$line" ]; then $0 $line; fi
 		prev=$line
 	done ;;
 
