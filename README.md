@@ -17,13 +17,16 @@ Shorthand commands for ADB, and conveniences for profiling and logging Unity.
 ```
 Usage: heydroid <command>
 Commands:
-  install <path/to/my.apk>
-  uninstall <com.pkg.my>
+  help
+  interactive                              (Default)
+  install [path/to/my.apk]
+  uninstall [com.pkg.my]
+  reinstall [path/to/my.apk] [com.pkg.my]
   list
-  start <com.pkg.my>
-  kill <com.pkg.my>
-  profile <com.pkg.my>      (Unity)
-  log                       (Unity)
+  start [com.pkg.my/com.pkg.my.activity]
+  kill [com.pkg.my]
+  profile [com.pkg.my]                     (Unity3D only)
+  log                                      (Unity3D only)
   screencap <path/to/file.png>
 ```
 
