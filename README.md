@@ -12,7 +12,7 @@ Print the current state of git repositories to stdout, with information about lo
 
 # heydroid
 
-Shorthand commands for ADB, and conveniences for profiling and logging Unity.
+Shorthand commands for ADB, and conveniences for profiling and logging Unity. Start without arguments for the interactive command prompt.
 
 ```
 Usage: heydroid <command>
@@ -28,6 +28,14 @@ Commands:
   profile [com.pkg.my]                     (Unity3D only)
   log                                      (Unity3D only)
   screencap <path/to/file.png>
+```
+
+Example .heydroid_config file, which means arguments can be dropped to some commands:
+```
+HEYDROID_SDK=/usr/local/android
+HEYDROID_APK=my.apk
+HEYDROID_PKG=com.pkg.my
+HEYDROID_APP=com.pkg.my.activity
 ```
 
 # patchdir
