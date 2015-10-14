@@ -80,6 +80,7 @@ s|screencap)
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
 
 ''|interactive)
+	if [ -e .heydroid_config ]; then echo "Configuration: $HEYDROID_APK: $HEYDROID_PKG/$HEYDROID_APP"; fi
 	${ADB} start-server
 	${ADB} devices
 	while /bin/echo -n 'heydroid> ' && read -r line; do
