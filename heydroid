@@ -87,7 +87,7 @@ c|screencap)
 	if [ -e .heydroid_config ]; then echo "Configuration: $HEYDROID_APK: $HEYDROID_PKG/$HEYDROID_APP"; fi
 	${ADB} start-server
 	${ADB} devices
-	while /bin/echo -n 'heydroid> ' && read -r line; do
+	while /bin/echo -n $'\e[96mhey\e[92mdroid\e[0m> ' && read -r line; do
 		if [ "$line" = '!!' ]; then line=$prev; fi
 		$0 $line
 		prev=$line
