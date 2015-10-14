@@ -91,7 +91,7 @@ c|screencap)
 	${ADB} devices
 	while /bin/echo -n $'\e[96mhey\e[92mdroid\e[0m> ' && read -r line; do
 		if [ -z "$line" ]; then line=$prev; fi
-		if [ -n "$line" ]; then $0 $line; fi
+		if [ -n "$line" ]; then sh -c "$0 $line"; fi
 		prev=$line
 	done ;;
 
