@@ -30,6 +30,7 @@ h|help)
 	echo "  interactive                              (Default)"
 	echo "  install [path/to/my.apk]"
 	echo "  uninstall [com.pkg.my]"
+	echo "  reinstall [path/to/my.apk] [com.pkg.my]"
 	echo "  list"
 	echo "  start [com.pkg.my/com.pkg.my.activity]"
 	echo "  kill [com.pkg.my]"
@@ -38,17 +39,20 @@ h|help)
 	echo "  screencap <path/to/file.png>"
 	;;
 
-i|in|install)
+i|install)
 	apk="$2"
 	if [ -z "$apk" ]; then apk="$HEYDROID_APK"; fi
 	if [ -z "$apk" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
 	${ADB} install $apk ;;
 
-u|un|uninstall)
+u|uninstall)
 	pkg="$2"
 	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
 	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
 	${ADB} shell pm uninstall $pkg ;;
+
+r|reinstall)
+	$0 u $3 && $0 i $2 ;;
 
 l|list)
 	${ADB} shell pm list packages -f ;;
@@ -75,7 +79,7 @@ p|profile)
 o|log)
 	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' ;;
 
-s|screencap)
+c|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
 
