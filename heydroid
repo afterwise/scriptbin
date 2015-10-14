@@ -22,21 +22,22 @@ fi
 
 ADB=${HEYDROID_SDK}/platform-tools/adb
 
-if [ $# -lt 1 ]; then
-	echo "Usage: `basename $0` <command>"
+case "$1" in
+h|help)
+	echo "Usage: `basename $0` [command]"
 	echo "Commands:"
+	echo "  help"
+	echo "  interactive                              (Default)"
 	echo "  install [path/to/my.apk]"
 	echo "  uninstall [com.pkg.my]"
 	echo "  list"
 	echo "  start [com.pkg.my/com.pkg.my.activity]"
 	echo "  kill [com.pkg.my]"
-	echo "  profile [com.pkg.my]      (Unity)"
-	echo "  log                       (Unity)"
+	echo "  profile [com.pkg.my]                     (Unity3D only)"
+	echo "  log                                      (Unity3D only)"
 	echo "  screencap <path/to/file.png>"
-	exit 1
-fi
+	;;
 
-case "$1" in
 i|in|install)
 	apk="$2"
 	if [ -z "$apk" ]; then apk="$HEYDROID_APK"; fi
@@ -77,6 +78,15 @@ o|log)
 s|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
+
+''|interactive)
+	${ADB} start-server
+	${ADB} devices
+	while /bin/echo -n 'heydroid> ' && read -r line; do
+		if [ "$line" = '!!' ]; then line=$prev; fi
+		$0 $line
+		prev=$line
+	done ;;
 
 *)
 	${ADB} $* ;;
