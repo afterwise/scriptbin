@@ -37,6 +37,7 @@ h|help)
 	echo "  profile [com.pkg.my]                     (Unity3D only)"
 	echo "  log                                      (Unity3D only)"
 	echo "  screencap <path/to/file.png>"
+	echo "  screenrec <path/to/file.mp4> [length]"
 	;;
 
 i|install)
@@ -82,6 +83,14 @@ o|log)
 c|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
 	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
+
+e|screenrec|screenrecord)
+	tmp=/sdcard/screenrecord_$RANDOM.mp4
+	len=10
+	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.mp4>" && exit 1; fi
+	if [ "$3" -eq "$3" ] 2>/dev/null; then len=$3; fi
+	${ADB} shell screenrecord --time-limit $len "$tmp" && ${ADB} pull "$tmp" "$2"
+	${ADB} shell rm -f "$tmp" ;;
 
 ''|interactive)
 	if [ -e .heydroid_config ]; then
