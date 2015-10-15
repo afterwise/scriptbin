@@ -28,6 +28,7 @@ Commands:
   profile [com.pkg.my]                     (Unity3D only)
   log                                      (Unity3D only)
   screencap <path/to/file.png>
+  screenrec <path/to/file.mp4> [length]
 ```
 
 Example .heydroid_config file, which means arguments can be dropped to some commands:
