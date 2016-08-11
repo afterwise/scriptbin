@@ -1,0 +1,79 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 <name>"
+	exit 1
+fi
+
+####################################################################################################
+####################################################################################################
+
+lc=$1
+uc=$(tr '[:lower:]' '[:upper:]' <<< ${1})
+fc=$(tr '[:lower:]' '[:upper:]' <<< ${1:0:1})${1:1}
+
+####################################################################################################
+####################################################################################################
+
+if [ ! -d $lc ]; then
+
+mkdir $lc || exit 1
+
+####################################################################################################
+
+cat > $lc/requires.mk << EOF
+
+# REQUIRES = \\
+#	../extern/aw-debug
+
+EOF
+
+####################################################################################################
+
+cat > $lc.mk << EOF
+
+PROGRAMS += $fc
+
+# PRODUCTS += lib$lc\$(EXESUF)\$(SOSUF)
+
+# ${uc}LIBS = \\
+#	libaw-debug
+
+# lib${lc}.%\$(SOSUF): export DEFINES += _${lc}_shared
+# lib${lc}.%\$(SOSUF): export CFLAGS += -fvisibility=hidden
+# lib${lc}.%\$(SOSUF): LIBRARIES += dl
+
+# ifneq (\$(findstring darwin, \$(TARGET)),)
+# ${fc}.%: FRAMEWORKS += IOKit
+# endif
+
+$fc.%: $lc/lib$lc.%\$(LIBSUF) \$(patsubst %, extern/%\$(EXESUF)\$(LIBSUF), \$(${uc}LIBS))
+	\$(link)
+
+# lib$lc.%\$(SOSUF): $lc/lib$lc\$(EXESUF)\$(LIBSUF) \$(patsubst %, extern/%\$(EXESUF)\$(LIBSUF), \$(${uc}LIBS))
+#	\$(link-shared)
+
+EOF
+
+fi # if [ ! -d $lc ]; then
+
+####################################################################################################
+####################################################################################################
+
+if [ ! -e build.sh ]; then
+
+cat > build.sh << EOF
+#!/bin/sh
+
+# export AW_CLONE_PATH=../..
+
+test -d aw-make || git clone https://github.com/afterwise/aw-make.git || exit 1
+make -f aw-make/bas.mk \$* || exit 1
+if [ "\$*" == "distclean" ]; then rm -rf aw-make; fi
+
+EOF
+
+chmod +x build.sh
+
+fi # if [ ! -e build.sh ]; then
+
