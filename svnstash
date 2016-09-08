@@ -24,7 +24,7 @@ case "$1" in
 		svn status $* | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
 		cat $l | sort | uniq | tee $l.tmp
 		mv $l.tmp $l ;;
-	''|status)
+	status)
 		shift
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
