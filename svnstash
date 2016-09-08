@@ -22,6 +22,7 @@ case "$1" in
 		exit 1 ;;
 	update)
 		shift
+		mkdir -p $d
 		svn status $* | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
 		cat $l | sort | uniq | tee $l.tmp
 		mv $l.tmp $l ;;
