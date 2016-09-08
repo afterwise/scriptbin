@@ -45,3 +45,22 @@ Patch/upgrade any directory (in source control), e.g. when upgrading the statica
 
 `Usage: patchdir [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
 
+# svnstash
+
+A dead-simple stash for svn, similar to git-stash.
+
+```
+svnstash <command> [match]
+
+commands:
+        help         - show this help
+        update       - update stash list with modified files in the repository
+        status       - show current stash list
+        discard      - remove file from stash
+        obliterate   - remove entire stash
+        stow         - copy file into stash and revert in the repository
+        reset        - revert a stashed file in the repository
+        restore      - copy a stashed file back into the repository
+        diff         - show diff between stashed files and repository
+```
+
