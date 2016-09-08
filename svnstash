@@ -1,0 +1,82 @@
+#!/bin/sh
+
+a=`basename -s .sh $0`
+d=.$a
+l=$d/.list
+
+case "$1" in
+	help)
+		echo "$a <command> [match]"
+		echo ""
+		echo "commands:"
+		echo "	help"
+		echo "	update"
+		echo "	status"
+		echo "	discard"
+		echo "	obliterate"
+		echo "	stow"
+		echo "	reset"
+		echo "	restore"
+		echo "	diff"
+		exit 1 ;;
+	update)
+		shift
+		svn status $* | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
+		cat $l | sort | uniq | tee $l.tmp
+		mv $l.tmp $l ;;
+	''|status)
+		shift
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
+			if [ -e "$d/$s" ]; then
+				if [ -z "`diff -q \"$p\" \"$d/$s\"`" ]; then echo "   $p"
+				else echo "!  $p"; fi
+			else echo "? $p"; fi
+		done < $l ;;
+	discard)
+		shift
+		if [ $# -gt 0 ]; then
+			rm -f $l.tmp
+			while read p; do
+				if [ -z "`echo $p | grep \"$*\"`" ]; then echo $p | tee -a $l.tmp
+				else echo "- $p"; fi
+			done < $l
+			mv $l.tmp $l
+		fi ;;
+	obliterate)
+		rm -rf $d ;;
+	stow)
+		shift
+		mkdir -p $d
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
+			if [ -e "$p" ]; then cp -v "$p" "$d/$s" && svn revert "$p"; fi
+		done < $l ;;
+	reset)
+		shift
+		mkdir -p $d
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			if [ -e "$p" ]; then svn revert "$p"; fi
+		done < $l ;;
+	restore)
+		shift
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
+			if [ -e "$d/$s" ]; then cp -v "$d/$s" "$p"; fi
+		done < $l ;;
+	diff)
+		shift
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
+			if [ -e "$d/$s" ]; then diff -u "$p" "$d/$s"; fi
+		done < $l ;;
+	*)
+		echo "Huh?"
+		exit 1 ;;
+esac
+
