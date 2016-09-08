@@ -18,6 +18,7 @@ case "$1" in
 		echo "	reset        - revert a stashed file in the repository"
 		echo "	restore      - copy a stashed file back into the repository"
 		echo "	diff         - show diff between stashed files and repository"
+		echo "  changelist   - add or remove repository files from the stash list from a changelist"
 		exit 1 ;;
 	update)
 		shift
@@ -25,6 +26,7 @@ case "$1" in
 		cat $l | sort | uniq | tee $l.tmp
 		mv $l.tmp $l ;;
 	status)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
@@ -35,6 +37,7 @@ case "$1" in
 			else echo "? $p"; fi
 		done < $l ;;
 	discard)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		if [ $# -gt 0 ]; then
 			rm -f $l.tmp
@@ -47,6 +50,7 @@ case "$1" in
 	obliterate)
 		rm -rf $d ;;
 	stow)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		mkdir -p $d
 		while read p; do
@@ -55,6 +59,7 @@ case "$1" in
 			if [ -e "$p" ]; then cp -v "$p" "$d/$s" && svn revert "$p"; fi
 		done < $l ;;
 	reset)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		mkdir -p $d
 		while read p; do
@@ -62,6 +67,7 @@ case "$1" in
 			if [ -e "$p" ]; then svn revert "$p"; fi
 		done < $l ;;
 	restore)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
@@ -69,11 +75,23 @@ case "$1" in
 			if [ -e "$d/$s" ]; then cp -v "$d/$s" "$p"; fi
 		done < $l ;;
 	diff)
+		if [ ! -e $l ]; then exit 1; fi
 		shift
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
 			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
 			if [ -e "$d/$s" ]; then diff -u "$p" "$d/$s"; fi
+		done < $l ;;
+	changelist)
+		if [ ! -e $l ]; then exit 1; fi
+		shift
+		if [ $# -eq 0 ]; then echo "Wat?"; exit 1; fi
+		z=$1
+		shift
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
+			if [ -e "$d/$s" ]; then svn cl $z "$p"; fi
 		done < $l ;;
 	*)
 		echo "Huh?"

@@ -62,5 +62,6 @@ commands:
         reset        - revert a stashed file in the repository
         restore      - copy a stashed file back into the repository
         diff         - show diff between stashed files and repository
+	changelist   - add or remove repository files from the stash list from a changelist
 ```
 
