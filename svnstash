@@ -9,21 +9,40 @@ case "$1" in
 		echo "$a <command> [match]"
 		echo ""
 		echo "commands:"
-		echo "	help         - show this help"
-		echo "	update       - update stash list with modified files in the repository"
-		echo "	status       - show current stash list"
-		echo "	discard      - remove file from stash"
-		echo "	obliterate   - remove entire stash"
-		echo "	stow         - copy file into stash and revert in the repository"
-		echo "	reset        - revert a stashed file in the repository"
-		echo "	restore      - copy a stashed file back into the repository"
-		echo "	diff         - show diff between stashed files and repository"
+		echo "  help         - show this help"
+		echo "  track        - update stash list and add untracked files in the repository"
+		echo "  update       - update stash list with modified files in the repository"
+		echo "  status       - show current stash list"
+		echo "  discard      - remove file from stash"
+		echo "  obliterate   - remove entire stash"
+		echo "  copy         - copy file into stash"
+		echo "  reset        - revert a stashed file in the repository"
+		echo "  restore      - copy a stashed file back into the repository"
+		echo "  diff         - show diff between stashed files and repository"
 		echo "  changelist   - add or remove repository files from the stash list from a changelist"
 		exit 1 ;;
+	track)
+		shift
+		mkdir -p $d
+		if [ $# -gt 0 ]; then
+			svn status | grep '^?' | sed -E 's/^\?\s+//g' | tr '\\' '/' | grep "$*" >> $l
+		else
+			svn status | grep '^?' | sed -E 's/^\?\s+//g' | tr '\\' '/' >> $l
+		fi
+		cat $l | sort | uniq | tee $l.tmp
+		mv $l.tmp $l
+		while read p; do
+			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
+			if [ -e "$p" ]; then svn add "$p"; fi
+		done < $l ;;
 	update)
 		shift
 		mkdir -p $d
-		svn status $* | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
+		if [ $# -gt 0 ]; then
+			svn status | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' | grep "$*" >> $l
+		else
+			svn status | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
+		fi
 		cat $l | sort | uniq | tee $l.tmp
 		mv $l.tmp $l ;;
 	status)
@@ -50,14 +69,14 @@ case "$1" in
 		fi ;;
 	obliterate)
 		rm -rf $d ;;
-	stow)
+	copy)
 		if [ ! -e $l ]; then exit 1; fi
 		shift
 		mkdir -p $d
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
 			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
-			if [ -e "$p" ]; then cp -v "$p" "$d/$s" && svn revert "$p"; fi
+			if [ -e "$p" ]; then cp -v "$p" "$d/$s"; fi
 		done < $l ;;
 	reset)
 		if [ ! -e $l ]; then exit 1; fi
@@ -92,7 +111,7 @@ case "$1" in
 		while read p; do
 			if [ $# -gt 0 ] && [ -z "`echo $p | grep \"$*\"`" ]; then continue; fi
 			s=`echo $p | sha1sum | sed -E 's/\s.*+$//g'`
-			if [ -e "$d/$s" ]; then svn cl $z "$p"; fi
+			svn cl $z "$p"
 		done < $l ;;
 	*)
 		echo "Huh?"
