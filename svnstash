@@ -39,9 +39,9 @@ case "$1" in
 		shift
 		mkdir -p $d
 		if [ $# -gt 0 ]; then
-			svn status | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' | grep "$*" >> $l
+			svn status | grep -E '^\s*M+' | sed -E 's/^\s*M+\s+//g' | tr '\\' '/' | grep "$*" >> $l
 		else
-			svn status | grep '^M' | sed -E 's/^M\s+//g' | tr '\\' '/' >> $l
+			svn status | grep -E '^\s*M+' | sed -E 's/^\s*M+\s+//g' | tr '\\' '/' >> $l
 		fi
 		cat $l | sort | uniq | tee $l.tmp
 		mv $l.tmp $l ;;
