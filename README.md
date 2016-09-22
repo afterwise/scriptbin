@@ -45,6 +45,38 @@ Patch/upgrade any directory (in source control), e.g. when upgrading the statica
 
 `Usage: patchdir [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
 
+# svnmove
+
+A move, rename and renumber tool for svn.
+
+`Usage: svnmove [-y][-n] <new-path> <old-path ...>`
+
+Examples:
+```
+$ svnmove /c /c/foo/quux*.wav
+/c/foo/quux_01.wav -> /c/quux_01.wav
+/c/foo/quux_03.wav -> /c/quux_03.wav
+/c/foo/quux_05.wav -> /c/quux_05.wav
+/c/foo/quux_07.wav -> /c/quux_07.wav
+/c/foo/quux_09.wav -> /c/quux_09.wav
+```
+```
+$ svnmove /c/bar /c/foo/quux*.wav
+/c/foo/quux_01.wav -> /c/bar_01.wav
+/c/foo/quux_03.wav -> /c/bar_03.wav
+/c/foo/quux_05.wav -> /c/bar_05.wav
+/c/foo/quux_07.wav -> /c/bar_07.wav
+/c/foo/quux_09.wav -> /c/bar_09.wav
+```
+```
+$ svnmove -n /c/bar /c/foo/quux*.wav
+/c/foo/quux_01.wav -> /c/bar_01.wav
+/c/foo/quux_03.wav -> /c/bar_02.wav
+/c/foo/quux_05.wav -> /c/bar_03.wav
+/c/foo/quux_07.wav -> /c/bar_04.wav
+/c/foo/quux_09.wav -> /c/bar_05.wav
+```
+
 # svnstash
 
 A dead-simple stash for svn, similar to git-stash.

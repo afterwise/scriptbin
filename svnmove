@@ -1,0 +1,61 @@
+#!/bin/sh
+
+a=`basename -s .sh $0`
+
+if [ $# -lt 2 ]; then
+	echo "Usage: $a [-y][-n] <new-path> <old-path ...>"
+	exit 1
+fi
+
+y=0
+n=-1
+g=
+while [ $# -gt 2 ]; do
+	case "$1" in
+		-y) shift; y=1;;
+		-n) shift; n=0;;
+		*) g=$1; shift; break;;
+	esac
+done
+
+m=-1
+for p in $*; do
+	d=`dirname $p`
+	f=`basename $p`
+	s=`echo $f | grep -oE '(\.[a-z]+)+$'`
+	f=`echo $f | sed -E 's/([^\.]+)(\.[a-z]+)+$/\1/g'`
+
+	i=`dirname $g`
+	if [ "$i" == "." ]; then i=$d; fi
+	j=`basename $g`
+	t=`echo $j | grep -oE '(\.[a-z]+)+$'`
+	j=`echo $j | sed -E 's/([^\.]+)(\.[a-z]+)+$/\1/g'`
+
+	if [ -d "$g" ]; then
+		i=$g
+		h=$f
+	elif [ `echo $f | grep -oE '[0-9]+$'` ]; then
+		k=`echo $f | sed -E 's/^.+_([0-9]+)$/\1/g'`
+		if [ $n -ge 0 ]; then
+			if [ $m -ne $k ]; then
+				m=$k
+				let n=n+1
+			fi
+			h=${j}_`printf "%02d" $n`
+		else
+			h=${j}_$k
+		fi
+	else
+		h=$j
+	fi
+
+	if [ -z "$t" ]; then t=$s; fi
+
+	if [ $y -ne 0 ]; then
+		echo "$d/$f$s -> $i/$h$t"
+	else
+		svn move "$d/$f$s" "$i/$h$t"
+		svn cl move "$d/$f$s" "$i/$h$t"
+	fi
+done
+
