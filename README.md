@@ -45,6 +45,12 @@ Patch/upgrade any directory (in source control), e.g. when upgrading the statica
 
 `Usage: patchdir [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
 
+# playskel
+
+Generate a template Unity3D Playable class with supporting Asset and Track classes.
+
+`Usage: playskel <[path/]name>`
+
 # svnmove
 
 A move, rename and renumber tool for svn.
