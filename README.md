@@ -51,6 +51,20 @@ Generate a template Unity3D Playable class with supporting Asset and Track class
 
 `Usage: playskel <[path/]name>`
 
+# splitpatch
+
+Split a multi-file patch into individual patches, one for each file. Also remove the directory part of the path and store that separately. All this to workaround the fact that `patch' does not handle spaces in paths the way `diff' produces them: https://www.gnu.org/software/diffutils/manual/html_node/Unusual-File-Names.html#Unusual%20File%20Names
+
+```
+Typical Usage:
+  Splitting:
+    splitpatch foo.patch
+  Applying:
+    splitpatch -apply
+  Cleaning:
+    splitpatch -clean
+```
+
 # svnmove
 
 A move, rename and renumber tool for svn.

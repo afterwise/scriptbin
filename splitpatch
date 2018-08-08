@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+# Split a multi-file patch into individual patches, one for each file.
+# Also remove the directory part of the path and store that separately.
+# All this to workaround the fact that `patch' does not handle spaces
+# in paths the way `diff' produces them:
+# https://www.gnu.org/software/diffutils/manual/html_node/Unusual-File-Names.html#Unusual%20File%20Names
+
+use Cwd;
+use Digest::MD5 qw(md5_hex);
+use File::Basename;
+use File::Path;
+
+$datadir = 'splitpatchdata';
+
+if ($ARGV[0] eq '-apply') {
+    my $home = getcwd();
+    my @files = <$datadir/*>;
+
+    for (my $i = 0; $i < $#files; ++$i) {
+        $files[$i] =~ /\.dir$/ or die;
+        {
+            local $/;
+            open my $tmp, '<', $home.'/'.$files[$i] or die;
+            $data = <$tmp>;
+            $data =~ s/\s+$//;
+            chdir("$home/$data");
+            print "- $home/$data\n";
+            close $tmp;
+        }
+
+        ++$i;
+        $files[$i] =~ /\.patch$/ or die;
+
+        my @args = ('patch', '-t', '-s', '-i', $home.'/'.$files[$i]);
+        system(@args) == 0 or die;
+    }
+
+    exit;
+} elsif ($ARGV[0] eq '-clean') {
+    rmtree($datadir);
+    exit;
+} elsif ($ARGV[0] eq '' || $ARGV[0] =~ /^-/) {
+    print "Typical Usage:\n\n";
+    print "  Splitting:\n";
+    print "    splitpatch foo.patch\n\n";
+    print "  Applying:\n";
+    print "    splitpatch -apply\n\n";
+    print "  Cleaning:\n";
+    print "    splitpatch -clean\n\n";
+    die;
+}
+
+rmtree($datadir);
+mkdir($datadir);
+
+open my $patch, '<', $ARGV[0] or die;
+while (<$patch>) {
+    if (/^Index: ([^\r\n]+)[\r\n]?$/) {
+        $index = $1;
+        $digest = md5_hex($index);
+        $file = basename($index);
+        $dir = dirname($index);
+
+        close FD;
+
+        open(FD, '>>', $datadir.'/'.$digest.'.dir') or die;
+        say FD $dir;
+        close FD;
+
+        open(FD, '>>', $datadir.'/'.$digest.'.patch') or die;
+
+        print 'Index: '.$index."\n";
+    }
+ 
+    s/$index/$file/;
+
+    die unless FD;
+    print FD;
+}
+
+close FD;
+close $patch;
+
