@@ -10,7 +10,7 @@ fi
 y=0
 n=-1
 g=
-while [ $# -gt 2 ]; do
+while [ $# -gt 1 ]; do
 	case "$1" in
 		-y) shift; y=1;;
 		-n) shift; n=0;;

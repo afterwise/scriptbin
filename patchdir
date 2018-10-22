@@ -2,7 +2,7 @@
 
 use File::Basename;
 use Getopt::Long;
-use List::MoreUtils qw(any);
+#use List::MoreUtils qw(any);
 
 GetOptions(
 	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs, 'a' => \$addonly,
