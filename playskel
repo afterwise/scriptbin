@@ -19,7 +19,8 @@ using UnityEngine;
 using UnityEngine.Playables;
 
 public sealed class ${name}Playable : PlayableBehaviour {
-    public static ScriptPlayable<${name}Playable> Create(PlayableGraph graph) {
+    public static ScriptPlayable<${name}Playable> Create(
+            PlayableGraph graph, GameObject gameObject, ${name}Clip clip) {
         var playable = ScriptPlayable<${name}Playable>.Create(graph, 0);
         var behaviour = playable.GetBehaviour();
         return playable;
@@ -34,21 +35,20 @@ public sealed class ${name}Playable : PlayableBehaviour {
 
 EOF
 
-cat > ${1}PlayableAsset.cs << EOF
+cat > ${1}Clip.cs << EOF
 
 using System;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
-[Serializable]
-public sealed class ${name}PlayableAsset : PlayableAsset, ITimelineClipAsset {
+public sealed class ${name}Clip : PlayableAsset, ITimelineClipAsset {
     public ClipCaps clipCaps { get { return ClipCaps.None; }}
 
     public override double duration { get { return PlayableBinding.DefaultDuration; }}
 
-    public override Playable CreatePlayable(PlayableGraph graph, GameObject @object) {
-        return ${name}Playable.Create(graph);
+    public override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject) {
+        return ${name}Playable.Create(graph, gameObject, this);
     }
 }
 
@@ -60,9 +60,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Timeline;
 
-[Serializable]
-[TrackClipType(typeof(${name}PlayableAsset))]
-[TrackMediaType(TimelineAsset.MediaType.Script)]
+[TrackClipType(typeof(${name}Clip))]
 public class ${name}Track : TrackAsset {
 }
 
