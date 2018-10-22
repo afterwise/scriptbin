@@ -2,13 +2,12 @@
 
 use File::Basename;
 use Getopt::Long;
-#use List::MoreUtils qw(any);
 
 GetOptions(
 	'y' => \$dryrun, 'v+' => \$verbose, 'r=s' => \$rcs, 'a' => \$addonly,
 	'f' => \$force, 'x=s' => \@excludes, 'm=s' => \@matches);
 
-die("$0 [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>")
+die("$0 [-f] [-y] [-a] [-r {p4|svn|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>")
 	if (scalar(@ARGV) != 2);
 
 $source = $ARGV[0];
@@ -51,6 +50,11 @@ foreach $x (split(/\n/, `$cmd`)) {
 					push(@cmds, ("p4 delete -c default '$tt'"));
 					$ndel++;
 				}
+			} elsif ($rcs eq 'svn') {
+				if (-f $y) {
+					push(@cmds, ("svn remove '$t'"));
+					$ndel++;
+				}
 			} elsif ($rcs eq 'git') {
 				if (-f $y) {
 					push(@cmds, ("git remove '$t'"));
@@ -72,6 +76,11 @@ foreach $x (split(/\n/, `$cmd`)) {
 			if ($rcs eq 'p4') {
 				if (-f $y) {
 					push(@cmds, ("cp '$s' '$t'", "p4 add -d -f -c default '$t'"));
+					$nadd++;
+				}
+			} elsif ($rcs eq 'svn') {
+				if (-f $y) {
+					push(@cmds, ("cp '$s' '$t'", "svn add '$t'"));
 					$nadd++;
 				}
 			} elsif ($rcs eq 'git') {

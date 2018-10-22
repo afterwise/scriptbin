@@ -1,0 +1,40 @@
+#!/bin/bash
+
+function usage {
+    echo "Usage: `basename $0` {cp|mv} [opts] <from> <to>"
+    exit 1
+}
+
+if [[ $# -lt 3 ]]; then usage; fi
+if [[ "$1" != "cp" ]] && [[ "$1" != "mv" ]]; then usage; fi
+
+cmd=$1
+args=
+shift
+
+while [[ $# -gt 2 ]]; do
+    args="$args $1"
+    shift
+done
+
+$cmd $args "$1" "$2" || exit 1
+
+if [[ -f "$1.meta" ]]; then
+    $cmd $args "$1.meta" "$2.meta"
+fi
+
+name1=`basename $1`
+name2=`basename $2`
+
+if [[ "$name2" =~ \.c.*$ ]]; then
+    name1=`expr match "$name1" '\(.*\)\.c.*$'`
+    name2=`expr match "$name2" '\(.*\)\.c.*$'`
+    sed -e "s/\b$name1\b/$name2/g" "$2" > "$2.xxx"
+    mv "$2.xxx" "$2"
+elif [[ "$name2" =~ \.h$ ]]; then
+    name1=`expr match "$name1" '\(.*\)\.h$'`
+    name2=`expr match "$name2" '\(.*\)\.h$'`
+    sed -e "s/\b$name1\b/$name2/g" "$2" > "$2.xxx"
+    mv "$2.xxx" "$2"
+fi
+

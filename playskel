@@ -1,0 +1,68 @@
+#!/bin/sh
+
+if [ $# -ne 1 ]; then
+    echo "Usage: `basename $0` <[path/]name>"
+    exit 1
+fi
+
+dir=`dirname $1`
+name=`basename $1`
+
+if [ ! -d "$dir" ]; then
+    mkdir "$dir" || exit 1
+fi
+
+cat > ${1}Playable.cs << EOF
+
+using System;
+using UnityEngine;
+using UnityEngine.Playables;
+
+public sealed class ${name}Playable : PlayableBehaviour {
+    public static ScriptPlayable<${name}Playable> Create(
+            PlayableGraph graph, GameObject gameObject, ${name}Clip clip) {
+        var playable = ScriptPlayable<${name}Playable>.Create(graph, 0);
+        var behaviour = playable.GetBehaviour();
+        return playable;
+    }
+
+    public override void OnBehaviourPlay(Playable playable, FrameData data) {
+    }
+
+    public override void OnBehaviourPause(Playable playable, FrameData data) {
+    }
+}
+
+EOF
+
+cat > ${1}Clip.cs << EOF
+
+using System;
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.Timeline;
+
+public sealed class ${name}Clip : PlayableAsset, ITimelineClipAsset {
+    public ClipCaps clipCaps { get { return ClipCaps.None; }}
+
+    public override double duration { get { return PlayableBinding.DefaultDuration; }}
+
+    public override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject) {
+        return ${name}Playable.Create(graph, gameObject, this);
+    }
+}
+
+EOF
+
+cat > ${1}Track.cs << EOF
+
+using System;
+using UnityEngine;
+using UnityEngine.Timeline;
+
+[TrackClipType(typeof(${name}Clip))]
+public class ${name}Track : TrackAsset {
+}
+
+EOF
+
