@@ -74,7 +74,7 @@ p|profile)
 	pkg="$2"
 	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
 	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} forward tcp:54999 localabstract:Unity-$pkg
+	${ADB} forward tcp:34999 localabstract:Unity-$pkg
 	${ADB} forward --list ;;
 
 o|log)
