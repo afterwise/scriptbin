@@ -39,11 +39,11 @@ HEYDROID_PKG=com.pkg.my
 HEYDROID_APP=com.pkg.my.activity
 ```
 
-# patchdir
+# PatchDir
 
 Patch/upgrade any directory (in source control), e.g. when upgrading the statically linked version of libcurl in your game repository.
 
-`Usage: patchdir [-f] [-y] [-a] [-r {p4|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
+`Usage: patchdir [-f] [-y] [-a] [-r {p4|svn|git}] [-x <exclude> ...] [-m <match> ...] <source> <target>`
 
 # playskel
 
