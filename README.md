@@ -44,7 +44,7 @@ HEYDROID_APP=com.pkg.my.activity
 Patch/upgrade any directory (in source control), e.g. when upgrading the statically linked version of libcurl in your game repository.
 
 ```
-USAGE: PatchDir [OPTIONS]
+USAGE: PatchDir [OPTIONS] <source> <target>
 OPTIONS:
   -f, --force        Force operation
   -v, --verbose      Be verbose
