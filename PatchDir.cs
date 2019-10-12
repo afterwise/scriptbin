@@ -173,11 +173,11 @@ static class PatchDir {
             break;
 
         case RevisionControl.Subversion:
-            commands.Add(("svn", $"remove \"{dst}@\""));
+            commands.Add(("svn", $"remove -f \"{dst}@\""));
             break;
 
         case RevisionControl.Git:
-            commands.Add(("git", $"remove \"{dst}\""));
+            commands.Add(("git", $"rm -f \"{dst}\""));
             break;
 
         default:
@@ -295,17 +295,20 @@ static class PatchDir {
                     bool isDir = Exists(arg.path);
                     var files = isDir ? GetFiles(arg.path) : new[] {arg.path};
 
-                    foreach (var file in files) {
-                        var src = (target != "." ? $"{target}/" : "") + file.Substring(source.Length + 1);
-                        var dst = file;
+                    foreach (var file in files)
+                        if (arg.op == Operation.Remove)
+                            onFile(arg.op, null, file);
+                        else {
+                            var src = (target != "." ? $"{target}/" : "") + file.Substring(source.Length + 1);
+                            var dst = file;
 
-                        if (file.StartsWith(source)) {
-                            dst = src;
-                            src = file;
+                            if (file.StartsWith(source)) {
+                                dst = src;
+                                src = file;
+                            }
+
+                            onFile(arg.op, src, dst);
                         }
-
-                        onFile(arg.op, src, dst);
-                    }
 
                     if (isDir) {
                         foreach (var dir in GetDirectories(arg.path))
