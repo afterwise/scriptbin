@@ -92,7 +92,11 @@ o|log)
 
 c|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
-	${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2 ;;
+	if [ -n "$MSYSTEM" ]; then
+		${ADB} shell screencap -p | perl -pe 's/\x0D\x0A/\x0A/g' > $2
+	else
+		${ADB} shell screencap -p > $2
+	fi ;;
 
 e|screenrec|screenrecord)
 	tmp=/sdcard/screenrecord_$RANDOM.mp4
