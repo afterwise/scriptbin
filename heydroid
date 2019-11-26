@@ -32,7 +32,8 @@ h|help)
 	echo "  uninstall [com.pkg.my]"
 	echo "  reinstall [path/to/my.apk] [com.pkg.my]"
 	echo "  list"
-	echo "  start [com.pkg.my/com.pkg.my.activity]"
+	echo "  start [com.pkg.my[/com.pkg.my.activity]]"
+	echo "  restart [com.pkg.my[/com.pkg.my.activity]]"
 	echo "  kill [com.pkg.my]"
 	echo "  profile [com.pkg.my]                     (Unity3D only)"
 	echo "  log                                      (Unity3D only)"
@@ -44,41 +45,50 @@ i|install)
 	apk="$2"
 	if [ -z "$apk" ]; then apk="$HEYDROID_APK"; fi
 	if [ -z "$apk" ]; then echo "`basename $0` $1 <path/to/my.apk>" && exit 1; fi
-	${ADB} install $apk ;;
+	${ADB} install $apk || exit 1 ;;
 
 u|uninstall)
 	pkg="$2"
 	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
 	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} shell pm uninstall $pkg ;;
+	${ADB} shell pm uninstall $pkg || exit 1 ;;
 
 r|reinstall)
 	$0 u $3 && $0 i $2 ;;
 
 l|list)
-	${ADB} shell pm list packages -f ;;
+	${ADB} shell pm list packages -f || exit 1 ;;
 
 s|start)
 	app="$2"
 	if [ -z "$app" ]; then app="$HEYDROID_PKG/$HEYDROID_APP"; fi
-	if [ -z "$app" ]; then echo "`basename $0` $1 <com.pkg.my/com.pkg.my.activity>" && exit 1; fi
-	${ADB} shell am start -n $app ;;
+    if [[ ! "$app" =~ / ]] || [[ "$app" =~ (^/)|(/$) ]]; then
+        app=`adb shell dumpsys package | grep -Eio -m1 "$app/.+Unity.+Activity\$"`
+    fi
+    if [[ ! "$app" =~ / ]] || [[ "$app" =~ (^/)|(/$) ]]; then
+        app=`adb shell dumpsys package | grep -Eio -m1 "$app/.+Activity\$"`
+    fi
+	if [ -z "$app" ]; then echo "`basename $0` $1 [com.pkg.my[/com.pkg.my.activity]]" && exit 1; fi
+	${ADB} shell am start -n $app || exit 1 ;;
+
+t|restart)
+    $0 k $2 && $0 s $2 || exit 1 ;;
 
 k|kill)
 	pkg="$2"
 	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
 	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} shell am force-stop $pkg ;;
+	${ADB} shell am force-stop $pkg || exit 1 ;;
 
 p|profile)
 	pkg="$2"
 	if [ -z "$pkg" ]; then pkg="$HEYDROID_PKG"; fi
 	if [ -z "$pkg" ]; then echo "`basename $0` $1 <com.pkg.my>" && exit 1; fi
-	${ADB} forward tcp:34999 localabstract:Unity-$pkg
-	${ADB} forward --list ;;
+	${ADB} forward tcp:34999 localabstract:Unity-$pkg || exit 1
+	${ADB} forward --list || exit 1 ;;
 
 o|log)
-	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' ;;
+	${ADB} logcat -s Unity:IWEF | grep -Ev '^\w/\w+\s+\(\s*\d+\):\s*$' || exit 1 ;;
 
 c|screencap)
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.png>" && exit 1; fi
@@ -89,14 +99,14 @@ e|screenrec|screenrecord)
 	len=10
 	if [ -z "$2" ]; then echo "`basename $0` $1 <path/to/file.mp4>" && exit 1; fi
 	if [ "$3" -eq "$3" ] 2>/dev/null; then len=$3; fi
-	${ADB} shell screenrecord --time-limit $len "$tmp" && ${ADB} pull "$tmp" "$2"
+	${ADB} shell screenrecord --time-limit $len "$tmp" && ${ADB} pull "$tmp" "$2 || exit 1"
 	${ADB} shell rm -f "$tmp" ;;
 
 ''|interactive)
 	if [ -e .heydroid_config ]; then
 		echo $'Configuration: \e[96m' $HEYDROID_APK $'\e[0m:\e[92m' $HEYDROID_PKG $'\e[0m/\e[92m' $HEYDROID_APP $'\e[0m';
 	fi
-	${ADB} start-server
+	${ADB} start-server || exit 1
 	${ADB} devices
 	while /bin/echo -n $'\e[96mhey\e[92mdroid\e[0m> ' && read -r line; do
 		if [ -z "$line" ]; then line=$prev; fi

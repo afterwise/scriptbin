@@ -23,7 +23,8 @@ Commands:
   uninstall [com.pkg.my]
   reinstall [path/to/my.apk] [com.pkg.my]
   list
-  start [com.pkg.my/com.pkg.my.activity]
+  start [com.pkg.my[/com.pkg.my.activity]]
+  restart [com.pkg.my[/com.pkg.my.activity]]
   kill [com.pkg.my]
   profile [com.pkg.my]                     (Unity3D only)
   log                                      (Unity3D only)
