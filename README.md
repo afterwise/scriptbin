@@ -10,6 +10,12 @@ Print the current state of git repositories to stdout, with information about lo
 
 `Usage: gitstat <dirs>`
 
+# GuidTool
+
+Generate new guids for matching .meta files in Unity.
+
+`Usage: Usage: GuidTool [--dry-run] <pattern> [path]`
+
 # heydroid
 
 Shorthand commands for ADB, and conveniences for profiling and logging Unity. Start without arguments for the interactive command prompt.
