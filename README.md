@@ -1,3 +1,9 @@
+# 7up
+
+Automatically revert some files/directories before doing a svn update.
+
+`Usage 7up [nop|edit|help] [verbose] [cleanup]`
+
 # catxcactivitylog
 
 Print plain text and compressed XCode activity logs to stdout.
