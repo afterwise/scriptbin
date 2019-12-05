@@ -1,4 +1,5 @@
 #!/bin/sh
+# 7up v0.1
 
 nop=0
 edit=0
@@ -30,19 +31,26 @@ svn status
 
 while IFS= read -r line; do
     if [ -e "$line" ]; then
-        echo "-- Revert: $line";
+        if [[ "$line" =~ \.patch$ ]]; then
+            echo "-- Patch: $line";
+        else
+            echo "-- Revert: $line";
+        fi
     fi
 done < .7up
 
 if [ $edit -ne 0 ]; then
-    echo "-- Edit revert list, press enter to exit."
+    echo "-- Edit op list, press enter to exit."
     while IFS= read -r line; do
         if [[ "$line" =~ ^\s*$ ]]; then break; fi
 
         if [[ "$line" =~ ^\- ]]; then
             line=`echo $line | sed -E 's/\- *//'`
-            echo "-- Leave: $line";
+            echo "-- Drop: $line";
             cat .7up | grep -v $line > .1up && mv .1up .7up || exit 1
+        elif [[ "$line" =~ \.patch$ ]]; then
+            echo "-- Patch: $line";
+            echo $line >> .7up
         elif [ -e "$line" ]; then
             echo "-- Revert: $line";
             echo $line >> .7up
@@ -52,6 +60,8 @@ if [ $edit -ne 0 ]; then
     done
 elif [ $nop -eq 0 ]; then
     while IFS= read -r line; do
+        if [[ "$line" =~ \.patch$ ]]; then continue; fi
+
         if [ -d "$line" ]; then
             if [ $verbose -ne 0 ]; then echo ":: svn revert -R $line"; fi
             svn revert -R $line || exit 1
@@ -69,10 +79,13 @@ elif [ $nop -eq 0 ]; then
     if [ $verbose -ne 0 ]; then echo ":: svn update"; fi
     svn update || exit 1
 
-    if [ `ls *.patch 2>/dev/null | wc -l` -gt 0 ]; then
-        for f in *.patch; do
-            patch --dry-run --verbose -N -p0 < $f && patch --silent -N -p0 < $f
-        done
-    fi
+    while IFS= read -r line; do
+        if [[ ! "$line" =~ \.patch$ ]]; then continue; fi
+
+        if [ -f "$line" ]; then
+            if [ $verbose -ne 0 ]; then echo ":: patch -N -p0 < $line"; fi
+            patch --dry-run --verbose -N -p0 < $line && patch --silent -N -p0 < $line
+        fi
+    done < .7up
 fi
 
