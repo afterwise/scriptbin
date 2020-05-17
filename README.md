@@ -1,3 +1,9 @@
+# bq
+
+Query the burst manifest for function names.
+
+`Usage: bq <linkname>`
+
 # catxcactivitylog
 
 Print plain text and compressed XCode activity logs to stdout.
