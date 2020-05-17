@@ -1,0 +1,91 @@
+#!/bin/sh
+# 7up v0.1
+
+nop=0
+edit=0
+cleanup=0
+verbose=0
+usage=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    n|nop|noop) nop=1 ;;
+    e|edit) edit=1 ;;
+    c|clean|cleanup) cleanup=1 ;;
+    v|verb|verbose) verbose=1 ;;
+    h|help|*) usage=1 ;;
+    esac
+    shift
+done
+
+if [ $usage -ne 0 ]; then
+    echo "Usage `basename $0` [nop|edit|help] [verbose] [cleanup]"
+    exit 1
+fi
+
+touch .7up
+
+echo "-- Status:"
+if [ $verbose -ne 0 ]; then echo ":: svn status"; fi
+svn status
+
+while IFS= read -r line; do
+    if [ -e "$line" ]; then
+        if [[ "$line" =~ \.patch$ ]]; then
+            echo "-- Patch: $line";
+        else
+            echo "-- Revert: $line";
+        fi
+    fi
+done < .7up
+
+if [ $edit -ne 0 ]; then
+    echo "-- Edit op list, press enter to exit."
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^\s*$ ]]; then break; fi
+
+        if [[ "$line" =~ ^\- ]]; then
+            line=`echo $line | sed -E 's/\- *//'`
+            echo "-- Drop: $line";
+            cat .7up | grep -v $line > .1up && mv .1up .7up || exit 1
+        elif [[ "$line" =~ \.patch$ ]]; then
+            echo "-- Patch: $line";
+            echo $line >> .7up
+        elif [ -e "$line" ]; then
+            echo "-- Revert: $line";
+            echo $line >> .7up
+        else
+            echo "-- Bad file: $line"
+        fi
+    done
+elif [ $nop -eq 0 ]; then
+    while IFS= read -r line; do
+        if [[ "$line" =~ \.patch$ ]]; then continue; fi
+
+        if [ -d "$line" ]; then
+            if [ $verbose -ne 0 ]; then echo ":: svn revert -R $line"; fi
+            svn revert -R $line || exit 1
+        elif [ -f "$line" ]; then
+            if [ $verbose -ne 0 ]; then echo ":: svn revert $line"; fi
+            svn revert $line || exit 1
+        fi
+    done < .7up
+
+    if [ $cleanup -ne 0 ]; then
+        if [ $verbose -ne 0 ]; then echo ":: svn cleanup"; fi
+        svn cleanup || exit 1
+    fi
+
+    if [ $verbose -ne 0 ]; then echo ":: svn update"; fi
+    svn update || exit 1
+
+    while IFS= read -r line; do
+        if [[ ! "$line" =~ \.patch$ ]]; then continue; fi
+
+        if [ -f "$line" ]; then
+            if [ $verbose -ne 0 ]; then echo ":: patch -N -p0 < $line"; fi
+            patch --dry-run --verbose -N -p0 < $line && patch --silent -N -p0 < $line
+        fi
+    done < .7up
+fi
+
